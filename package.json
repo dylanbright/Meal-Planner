@@ -1,0 +1,12 @@
+{
+  "name": "dinner-repertoire",
+  "version": "1.0.0",
+  "description": "Home dinner repertoire tracker",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

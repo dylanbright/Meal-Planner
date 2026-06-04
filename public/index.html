@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dinner Repertoire</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Dinner Repertoire</h1>
+    <button id="addBtn" class="btn btn-primary">+ Add Meal</button>
+  </header>
+
+  <main>
+    <div id="searchBar">
+      <input type="text" id="searchInput" placeholder="Search meals..." autocomplete="off">
+    </div>
+
+    <div id="mealGrid"></div>
+    <p id="emptyState" class="empty-state hidden">No meals yet. Add your first one!</p>
+  </main>
+
+  <!-- Modal -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Meal</h2>
+        <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+      </div>
+      <form id="mealForm" novalidate>
+        <input type="hidden" id="mealId">
+
+        <div class="form-group">
+          <label for="mealName">Meal Name <span class="required">*</span></label>
+          <input type="text" id="mealName" placeholder="e.g. Chicken Tikka Masala" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="mealNights">Nights it provides</label>
+            <input type="number" id="mealNights" min="1" max="14" value="1">
+          </div>
+          <div class="form-group flex-grow">
+            <label for="mealRecipe">Recipe Link</label>
+            <input type="url" id="mealRecipe" placeholder="https://...">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="mealNotes">Notes</label>
+          <textarea id="mealNotes" rows="3" placeholder="Cooking tips, variations, family preferences..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="ingredientInput">Special Ingredients</label>
+          <div class="ingredient-input-row">
+            <input type="text" id="ingredientInput" placeholder="Add an ingredient and press Enter">
+            <button type="button" id="addIngredientBtn" class="btn btn-secondary">Add</button>
+          </div>
+          <div id="ingredientTags" class="ingredient-tags"></div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveBtn">Save Meal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete confirm dialog -->
+  <div id="deleteDialog" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content modal-sm">
+      <h2>Delete meal?</h2>
+      <p id="deleteDialogMsg"></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="deleteCancelBtn">Cancel</button>
+        <button class="btn btn-danger" id="deleteConfirmBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
