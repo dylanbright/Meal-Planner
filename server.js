@@ -1,6 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const Anthropic = require('@anthropic-ai/sdk');
 
 const app = express();
 const PORT = process.env.PORT || 3007;
@@ -125,6 +127,36 @@ async function scrapeIngredients(url) {
 
   throw new Error('No ingredient data found. Use the main recipe page URL (not a print page), or paste the ingredients manually.');
 }
+
+app.post('/api/parse-ingredients', async (req, res) => {
+  const { text } = req.body;
+  if (!text?.trim()) return res.status(400).json({ error: 'No text provided' });
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(503).json({ error: 'ANTHROPIC_API_KEY is not set. Add it to a .env file in the project folder.' });
+  }
+
+  try {
+    const client = new Anthropic();
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: `Extract only the ingredients from this recipe text. Return them one per line with quantities and preparation notes (e.g. "diced", "minced"). Remove all headings, instructions, ads, navigation, and non-ingredient content. No bullet points, numbers, or commentary — just the ingredients.\n\n${text}`
+      }]
+    });
+
+    const ingredients = message.content[0].text
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    res.json({ ingredients });
+  } catch (err) {
+    res.status(500).json({ error: 'AI parsing failed: ' + err.message });
+  }
+});
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Dinner Repertoire running at http://localhost:${PORT}`);

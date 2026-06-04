@@ -3,6 +3,9 @@
 ## Overview
 A home network web app for tracking our dinner repertoire. Built with Node.js/Express, storing data in `data/meals.json`. Run with `npm start` (port 3007).
 
+## AI features
+The "Clean up with AI" button on the meal form uses the Anthropic API (claude-haiku-4-5-20251001) to extract ingredients from pasted text. Requires `ANTHROPIC_API_KEY` set in a `.env` file in the project root (see `.env.example`). The rest of the app works fine without it.
+
 ## Data file
 `data/meals.json` contains real user data. Never clear, overwrite, or reset this file during development. Always back it up before running migrations.
 

@@ -254,6 +254,8 @@ main {
 .btn-danger { background: var(--danger); color: #fff; }
 .btn-danger:hover { background: var(--danger-dark); }
 
+.btn-block { width: 100%; margin-top: 8px; }
+
 /* Modal */
 .modal {
   position: fixed;

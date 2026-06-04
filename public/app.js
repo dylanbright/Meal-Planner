@@ -170,6 +170,39 @@ function closeModal() {
   mealNameInput.classList.remove('invalid');
 }
 
+// --- AI ingredient parsing ---
+
+document.getElementById('parseIngredientsBtn').addEventListener('click', async () => {
+  const text = mealIngredientsInput.value.trim();
+  if (!text) return;
+
+  const btn = document.getElementById('parseIngredientsBtn');
+  btn.disabled = true;
+  btn.textContent = 'Cleaning up…';
+  fetchStatus.textContent = '';
+  fetchStatus.className = 'fetch-status';
+
+  try {
+    const res = await fetch('/api/parse-ingredients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Unknown error');
+
+    mealIngredientsInput.value = data.ingredients.join('\n');
+    fetchStatus.textContent = `✓ ${data.ingredients.length} ingredients extracted`;
+    fetchStatus.className = 'fetch-status success';
+  } catch (err) {
+    fetchStatus.textContent = `✗ ${err.message}`;
+    fetchStatus.className = 'fetch-status error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Clean up with AI';
+  }
+});
+
 // --- Fetch ingredients from recipe URL ---
 
 mealRecipeInput.addEventListener('input', () => {

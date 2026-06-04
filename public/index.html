@@ -80,7 +80,8 @@
             <label for="mealIngredients">Recipe Ingredients <span class="label-hint">(for shopping lists)</span></label>
             <span id="fetchStatus" class="fetch-status"></span>
           </div>
-          <textarea id="mealIngredients" rows="6" placeholder="One ingredient per line. Use &quot;Fetch Ingredients&quot; above to auto-import from the recipe link."></textarea>
+          <textarea id="mealIngredients" rows="6" placeholder="Paste anything from the recipe — ingredients, instructions, the whole page. Click &quot;Clean up with AI&quot; to extract just the ingredients."></textarea>
+          <button type="button" id="parseIngredientsBtn" class="btn btn-secondary btn-block">Clean up with AI</button>
         </div>
 
         <div class="modal-actions">
