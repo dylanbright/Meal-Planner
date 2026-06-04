@@ -153,6 +153,11 @@ main {
   color: var(--primary);
 }
 
+.badge-last-had {
+  background: #eef4ee;
+  color: #3a6b3a;
+}
+
 .meal-notes {
   font-size: 13px;
   color: var(--text-muted);
@@ -342,6 +347,29 @@ input:focus, textarea:focus {
 }
 
 input.invalid { border-color: var(--danger); }
+
+/* Date input */
+input[type="date"] {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+  transition: border-color 0.15s;
+}
+
+input[type="date"]:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.date-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 
 /* Ingredient input */
 .ingredient-input-row {

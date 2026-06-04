@@ -15,6 +15,7 @@ const mealNameInput = document.getElementById('mealName');
 const mealNightsInput = document.getElementById('mealNights');
 const mealRecipeInput = document.getElementById('mealRecipe');
 const mealNotesInput = document.getElementById('mealNotes');
+const mealLastHadInput = document.getElementById('mealLastHad');
 const ingredientInput = document.getElementById('ingredientInput');
 const ingredientTags = document.getElementById('ingredientTags');
 
@@ -91,6 +92,7 @@ function renderGrid() {
       </div>
       <div class="meal-meta">
         <span class="badge badge-nights">${meal.nights} night${meal.nights !== 1 ? 's' : ''}</span>
+        ${meal.lastHad ? `<span class="badge badge-last-had">Last had ${formatDate(meal.lastHad)}</span>` : ''}
       </div>
       ${meal.recipeUrl ? `<div class="meal-recipe-link"><a href="${escHtml(meal.recipeUrl)}" target="_blank" rel="noopener">View Recipe &rarr;</a></div>` : ''}
       ${meal.notes ? `<div class="meal-notes">${escHtml(meal.notes)}</div>` : ''}
@@ -121,6 +123,7 @@ function openAdd() {
   mealForm.reset();
   mealIdInput.value = '';
   mealNightsInput.value = 1;
+  mealLastHadInput.value = '';
   renderIngredientTags();
   modalTitle.textContent = 'Add Meal';
   openModal();
@@ -135,6 +138,7 @@ function openEdit(id) {
   mealNameInput.value = meal.name;
   mealNightsInput.value = meal.nights;
   mealRecipeInput.value = meal.recipeUrl;
+  mealLastHadInput.value = meal.lastHad || '';
   mealNotesInput.value = meal.notes;
   renderIngredientTags();
   modalTitle.textContent = 'Edit Meal';
@@ -214,6 +218,7 @@ mealForm.addEventListener('submit', async e => {
     notes: mealNotesInput.value.trim(),
     nights: parseInt(mealNightsInput.value, 10) || 1,
     recipeUrl: mealRecipeInput.value.trim(),
+    lastHad: mealLastHadInput.value || null,
     specialIngredients: ingredients
   });
 
@@ -225,6 +230,10 @@ mealForm.addEventListener('submit', async e => {
 document.getElementById('addBtn').addEventListener('click', openAdd);
 document.getElementById('modalClose').addEventListener('click', closeModal);
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
+
+document.getElementById('todayBtn').addEventListener('click', () => {
+  mealLastHadInput.value = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+});
 
 document.getElementById('addIngredientBtn').addEventListener('click', addIngredient);
 ingredientInput.addEventListener('keydown', e => {
@@ -252,6 +261,12 @@ document.addEventListener('keydown', e => {
 searchInput.addEventListener('input', renderGrid);
 
 // --- Helpers ---
+
+function formatDate(dateStr) {
+  // dateStr is YYYY-MM-DD; parse as local date to avoid timezone shift
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
 
 function escHtml(str) {
   return String(str)

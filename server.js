@@ -34,6 +34,7 @@ app.post('/api/meals', (req, res) => {
     nights: req.body.nights || 1,
     recipeUrl: req.body.recipeUrl || '',
     specialIngredients: req.body.specialIngredients || [],
+    lastHad: req.body.lastHad || null,
     createdAt: new Date().toISOString()
   };
   meals.push(meal);
@@ -52,6 +53,7 @@ app.put('/api/meals/:id', (req, res) => {
     nights: req.body.nights ?? meals[index].nights,
     recipeUrl: req.body.recipeUrl ?? meals[index].recipeUrl,
     specialIngredients: req.body.specialIngredients ?? meals[index].specialIngredients,
+    lastHad: req.body.lastHad !== undefined ? (req.body.lastHad || null) : meals[index].lastHad,
     updatedAt: new Date().toISOString()
   };
   writeMeals(meals);
