@@ -98,7 +98,10 @@ async function scrapeIngredients(url) {
     throw new Error('Could not reach the recipe page. Check the URL and try again.');
   }
 
-  if (!response.ok) throw new Error(`Page returned an error (${response.status}).`);
+  if (response.status === 403 || response.status === 401) {
+    throw new Error('This site blocked the request. Try a different recipe site, or paste the ingredients manually.');
+  }
+  if (!response.ok) throw new Error(`Page returned an error (${response.status}). Try the main recipe page URL, not a print URL.`);
 
   const html = await response.text();
   const scriptRe = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
@@ -120,7 +123,7 @@ async function scrapeIngredients(url) {
     } catch (_) {}
   }
 
-  throw new Error('No ingredient data found on this page. The site may not support automatic extraction.');
+  throw new Error('No ingredient data found. Use the main recipe page URL (not a print page), or paste the ingredients manually.');
 }
 
 app.listen(PORT, '0.0.0.0', () => {
