@@ -423,6 +423,165 @@ input[type="date"]:focus {
 .modal-sm .modal-actions { justify-content: flex-end; }
 .modal-sm p { color: var(--text-muted); font-size: 14px; margin-top: 8px; }
 
+/* Two-column content area */
+#contentArea {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+#mealsSection {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Week plan panel */
+#weekPlan {
+  width: 256px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 76px;
+  max-height: calc(100vh - 96px);
+}
+
+.week-plan-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.week-plan-header h2 {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+#weekPlanList {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  min-height: 100px;
+  transition: background 0.15s, border-color 0.15s;
+  border-radius: 0 0 0 0;
+}
+
+#weekPlanList.drag-over {
+  background: var(--primary-light);
+}
+
+.week-plan-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 18px 8px;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+#weekPlanList.drag-over .week-plan-empty {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.week-plan-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 7px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  margin-bottom: 6px;
+}
+
+.week-plan-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.week-plan-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.week-plan-footer {
+  padding: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.week-plan-footer .btn {
+  width: 100%;
+  text-align: center;
+}
+
+/* Drag states on meal cards */
+.meal-card[draggable="true"] { cursor: grab; }
+.meal-card[draggable="true"]:active { cursor: grabbing; }
+.meal-card.dragging { opacity: 0.45; }
+
+/* Grocery list modal content */
+.grocery-meal {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.grocery-meal:last-child { border-bottom: none; }
+
+.grocery-meal-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+
+.grocery-ingredient-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.grocery-ingredient-list li {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 2px 0 2px 14px;
+  position: relative;
+}
+
+.grocery-ingredient-list li::before {
+  content: '•';
+  position: absolute;
+  left: 2px;
+  color: var(--primary);
+}
+
+.grocery-no-ingredients {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+@media (max-width: 680px) {
+  #contentArea { flex-direction: column-reverse; }
+  #weekPlan { width: 100%; position: static; max-height: none; }
+}
+
 @media (max-width: 480px) {
   header { padding: 12px 16px; }
   main { padding: 16px 14px; }

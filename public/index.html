@@ -13,12 +13,27 @@
   </header>
 
   <main>
-    <div id="searchBar">
-      <input type="text" id="searchInput" placeholder="Search meals..." autocomplete="off">
-    </div>
+    <div id="contentArea">
+      <div id="mealsSection">
+        <div id="searchBar">
+          <input type="text" id="searchInput" placeholder="Search meals..." autocomplete="off">
+        </div>
+        <div id="mealGrid"></div>
+        <p id="emptyState" class="empty-state hidden">No meals yet. Add your first one!</p>
+      </div>
 
-    <div id="mealGrid"></div>
-    <p id="emptyState" class="empty-state hidden">No meals yet. Add your first one!</p>
+      <div id="weekPlan">
+        <div class="week-plan-header">
+          <h2>This Week's Plan</h2>
+        </div>
+        <div id="weekPlanList">
+          <p class="week-plan-empty">Drag meals here to plan your week</p>
+        </div>
+        <div class="week-plan-footer">
+          <button id="groceryListBtn" class="btn btn-primary" disabled>Generate Grocery List</button>
+        </div>
+      </div>
+    </div>
   </main>
 
   <!-- Modal -->
@@ -87,6 +102,22 @@
       <div class="modal-actions">
         <button class="btn btn-ghost" id="deleteCancelBtn">Cancel</button>
         <button class="btn btn-danger" id="deleteConfirmBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grocery list modal -->
+  <div id="groceryModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Grocery List</h2>
+        <button class="modal-close" id="groceryModalClose" aria-label="Close">&times;</button>
+      </div>
+      <div id="groceryListContent"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="groceryModalCopyBtn">Copy to Clipboard</button>
+        <button class="btn btn-primary" id="groceryModalDoneBtn">Done</button>
       </div>
     </div>
   </div>

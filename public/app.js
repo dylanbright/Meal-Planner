@@ -2,6 +2,7 @@ let meals = [];
 let editingId = null;
 let pendingDeleteId = null;
 let ingredients = [];
+let weekPlan = [];
 
 const mealGrid = document.getElementById('mealGrid');
 const emptyState = document.getElementById('emptyState');
@@ -54,6 +55,8 @@ async function saveMeal(data) {
 async function deleteMeal(id) {
   await fetch(`/api/meals/${id}`, { method: 'DELETE' });
   meals = meals.filter(m => m.id !== id);
+  weekPlan = weekPlan.filter(wid => wid !== id);
+  renderWeekPlan();
   renderGrid();
 }
 
@@ -82,6 +85,13 @@ function renderGrid() {
   filtered.forEach(meal => {
     const card = document.createElement('div');
     card.className = 'meal-card';
+    card.setAttribute('draggable', 'true');
+    card.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', meal.id);
+      e.dataTransfer.effectAllowed = 'copy';
+      card.classList.add('dragging');
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
     card.innerHTML = `
       <div class="meal-card-header">
         <h3>${escHtml(meal.name)}</h3>
@@ -201,6 +211,118 @@ function closeDeleteDialog() {
   pendingDeleteId = null;
 }
 
+// --- Week plan ---
+
+const weekPlanList = document.getElementById('weekPlanList');
+
+weekPlanList.addEventListener('dragover', e => {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+  weekPlanList.classList.add('drag-over');
+});
+
+weekPlanList.addEventListener('dragleave', e => {
+  if (!weekPlanList.contains(e.relatedTarget)) {
+    weekPlanList.classList.remove('drag-over');
+  }
+});
+
+weekPlanList.addEventListener('drop', e => {
+  e.preventDefault();
+  weekPlanList.classList.remove('drag-over');
+  const id = e.dataTransfer.getData('text/plain');
+  if (id && !weekPlan.includes(id)) {
+    weekPlan.push(id);
+    renderWeekPlan();
+  }
+});
+
+function renderWeekPlan() {
+  weekPlanList.classList.remove('drag-over');
+  const groceryBtn = document.getElementById('groceryListBtn');
+
+  if (weekPlan.length === 0) {
+    weekPlanList.innerHTML = '<p class="week-plan-empty">Drag meals here to plan your week</p>';
+    groceryBtn.disabled = true;
+    return;
+  }
+
+  groceryBtn.disabled = false;
+  weekPlanList.innerHTML = '';
+  weekPlan.forEach(id => {
+    const meal = meals.find(m => m.id === id);
+    if (!meal) return;
+    const item = document.createElement('div');
+    item.className = 'week-plan-item';
+    item.innerHTML = `
+      <div class="week-plan-item-info">
+        <span class="week-plan-item-name">${escHtml(meal.name)}</span>
+        <span class="badge badge-nights">${meal.nights} night${meal.nights !== 1 ? 's' : ''}</span>
+      </div>
+      <button class="btn-icon delete" data-remove-plan="${escHtml(id)}" title="Remove">&times;</button>
+    `;
+    weekPlanList.appendChild(item);
+  });
+
+  weekPlanList.querySelectorAll('[data-remove-plan]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      weekPlan = weekPlan.filter(id => id !== btn.dataset.removePlan);
+      renderWeekPlan();
+    });
+  });
+}
+
+// --- Grocery list ---
+
+const groceryModal = document.getElementById('groceryModal');
+
+function openGroceryModal() {
+  const plannedMeals = weekPlan.map(id => meals.find(m => m.id === id)).filter(Boolean);
+  const content = document.getElementById('groceryListContent');
+
+  content.innerHTML = plannedMeals.map(meal => `
+    <div class="grocery-meal">
+      <div class="grocery-meal-name">${escHtml(meal.name)}</div>
+      ${meal.specialIngredients && meal.specialIngredients.length > 0
+        ? `<ul class="grocery-ingredient-list">${meal.specialIngredients.map(i => `<li>${escHtml(i)}</li>`).join('')}</ul>`
+        : `<p class="grocery-no-ingredients">No special ingredients</p>`
+      }
+    </div>
+  `).join('');
+
+  groceryModal.classList.remove('hidden');
+}
+
+function closeGroceryModal() {
+  groceryModal.classList.add('hidden');
+}
+
+document.getElementById('groceryListBtn').addEventListener('click', openGroceryModal);
+document.getElementById('groceryModalClose').addEventListener('click', closeGroceryModal);
+document.getElementById('groceryModalDoneBtn').addEventListener('click', closeGroceryModal);
+groceryModal.querySelector('.modal-backdrop').addEventListener('click', closeGroceryModal);
+
+document.getElementById('groceryModalCopyBtn').addEventListener('click', async () => {
+  const plannedMeals = weekPlan.map(id => meals.find(m => m.id === id)).filter(Boolean);
+  const lines = ['This Week\'s Grocery List', ''];
+  plannedMeals.forEach(meal => {
+    lines.push(meal.name + ':');
+    if (meal.specialIngredients && meal.specialIngredients.length > 0) {
+      meal.specialIngredients.forEach(i => lines.push('  • ' + i));
+    } else {
+      lines.push('  (no special ingredients)');
+    }
+    lines.push('');
+  });
+  try {
+    await navigator.clipboard.writeText(lines.join('\n').trim());
+    const btn = document.getElementById('groceryModalCopyBtn');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  } catch (_) {}
+});
+
 // --- Form submit ---
 
 mealForm.addEventListener('submit', async e => {
@@ -254,6 +376,7 @@ deleteDialog.querySelector('.modal-backdrop').addEventListener('click', closeDel
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (!deleteDialog.classList.contains('hidden')) closeDeleteDialog();
+    else if (!groceryModal.classList.contains('hidden')) closeGroceryModal();
     else if (!modal.classList.contains('hidden')) closeModal();
   }
 });
