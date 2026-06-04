@@ -40,6 +40,11 @@ header {
   box-shadow: var(--shadow);
 }
 
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
 header h1 {
   font-size: 1.4rem;
   font-weight: 700;
@@ -158,6 +163,11 @@ main {
   color: #3a6b3a;
 }
 
+.badge-ingredients {
+  background: #eef0f8;
+  color: #3a4a8a;
+}
+
 .meal-notes {
   font-size: 13px;
   color: var(--text-muted);
@@ -274,6 +284,7 @@ main {
 }
 
 .modal-sm { max-width: 360px; }
+.modal-lg { max-width: 620px; }
 
 .modal-header {
   display: flex;
@@ -347,6 +358,36 @@ input:focus, textarea:focus {
 }
 
 input.invalid { border-color: var(--danger); }
+
+/* Recipe URL + fetch button */
+.recipe-url-row {
+  display: flex;
+  gap: 8px;
+}
+
+.recipe-url-row input { flex: 1; }
+
+/* Form label row (label + status) */
+.form-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.label-hint {
+  font-weight: 400;
+  font-style: italic;
+  opacity: 0.75;
+}
+
+.fetch-status {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.fetch-status.fetching { color: var(--text-muted); }
+.fetch-status.success  { color: #3a6b3a; }
+.fetch-status.error    { color: var(--danger); }
 
 /* Date input */
 input[type="date"] {
@@ -423,9 +464,173 @@ input[type="date"]:focus {
 .modal-sm .modal-actions { justify-content: flex-end; }
 .modal-sm p { color: var(--text-muted); font-size: 14px; margin-top: 8px; }
 
+/* Shopping list */
+.modal-subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: -12px 0 16px;
+}
+
+.shopping-meal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 380px;
+  overflow-y: auto;
+  margin-bottom: 4px;
+}
+
+.shopping-meal-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.shopping-meal-row:hover:not(.no-ingredients) { background: var(--bg); }
+
+.shopping-meal-row.no-ingredients {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.shopping-meal-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+}
+
+.shopping-meal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shopping-meal-name {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.shopping-meal-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.no-ing-note { color: var(--danger); }
+
+.shopping-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 20px 0;
+  text-align: center;
+}
+
+/* Shopping list content (step 2) */
+.shopping-list-content {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.shopping-summary {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.shopping-section {
+  margin-bottom: 20px;
+}
+
+.shopping-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.special-title { color: #8a6a00; }
+
+.shopping-ingredient-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shopping-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.shopping-item.special-item {
+  background: #fffbea;
+  border: 1px solid #f0dfa0;
+}
+
+.shopping-item-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: 1;
+  cursor: pointer;
+}
+
+.shopping-item-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+  position: relative;
+  top: 2px;
+}
+
+.shopping-item-text {
+  transition: opacity 0.15s;
+}
+
+.shopping-item-text.checked-off {
+  text-decoration: line-through;
+  opacity: 0.4;
+}
+
+.shopping-item-meal {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Print styles */
+@media print {
+  header, #searchBar, .modal-actions, .modal-backdrop { display: none !important; }
+  .modal { position: static; padding: 0; }
+  .modal-backdrop { display: none; }
+  #shoppingModal { display: block !important; }
+  .modal-content { box-shadow: none; max-height: none; }
+  #shoppingStep1 { display: none !important; }
+  #shoppingStep2 { display: block !important; }
+  .shopping-list-content { max-height: none; overflow: visible; }
+}
+
 @media (max-width: 480px) {
   header { padding: 12px 16px; }
   main { padding: 16px 14px; }
   .form-row { flex-direction: column; }
   input[type="number"] { width: 100%; }
+  .recipe-url-row { flex-direction: column; }
+  .header-actions { gap: 8px; }
 }

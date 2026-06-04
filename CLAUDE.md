@@ -14,7 +14,8 @@ A home network web app for tracking our dinner repertoire. Built with Node.js/Ex
 | `nights` | number | How many nights the meal covers, default 1 |
 | `recipeUrl` | string | Optional |
 | `notes` | string | Optional |
-| `specialIngredients` | string[] | Optional, default `[]` |
+| `specialIngredients` | string[] | Optional, default `[]` — items to flag in shopping lists |
+| `ingredients` | string[] | Optional, default `[]` — full ingredient list fetched from recipe |
 | `lastHad` | string (YYYY-MM-DD) | Optional, `null` if unset |
 | `createdAt` | ISO string | Set on create |
 | `updatedAt` | ISO string | Set on edit, may be absent on older records |
