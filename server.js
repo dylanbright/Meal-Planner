@@ -158,6 +158,34 @@ app.post('/api/parse-ingredients', async (req, res) => {
   }
 });
 
+app.post('/api/estimate-cost', async (req, res) => {
+  const { ingredients } = req.body;
+  if (!ingredients?.length) return res.status(400).json({ error: 'No ingredients provided' });
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(503).json({ error: 'ANTHROPIC_API_KEY is not set. Add it to a .env file in the project folder.' });
+  }
+
+  try {
+    const client = new Anthropic();
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 2048,
+      messages: [{
+        role: 'user',
+        content: `Estimate grocery costs in USD at a typical US grocery store for these ingredients. Return ONLY valid JSON with this exact structure, no extra text:\n{"total_low": number, "total_high": number, "items": [{"ingredient": "...", "cost": number}], "note": "..."}\n\nIngredients:\n${ingredients.join('\n')}`
+      }]
+    });
+
+    const text = message.content[0].text;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Could not parse AI response');
+    res.json(JSON.parse(jsonMatch[0]));
+  } catch (err) {
+    res.status(500).json({ error: 'Cost estimation failed: ' + err.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Dinner Repertoire running at http://localhost:${PORT}`);
 });

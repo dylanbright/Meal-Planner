@@ -10,17 +10,35 @@
   <header>
     <h1>Dinner Repertoire</h1>
     <div class="header-actions">
-      <button id="shoppingBtn" class="btn btn-secondary">Shopping List</button>
       <button id="addBtn" class="btn btn-primary">+ Add Meal</button>
     </div>
   </header>
 
   <main>
-    <div id="searchBar">
-      <input type="text" id="searchInput" placeholder="Search meals..." autocomplete="off">
+    <!-- Left: meal repertoire -->
+    <div class="repertoire-col">
+      <div id="searchBar">
+        <input type="text" id="searchInput" placeholder="Search meals..." autocomplete="off">
+      </div>
+      <div id="mealGrid"></div>
+      <p id="emptyState" class="empty-state hidden">No meals yet. Add your first one!</p>
     </div>
-    <div id="mealGrid"></div>
-    <p id="emptyState" class="empty-state hidden">No meals yet. Add your first one!</p>
+
+    <!-- Right: weekly plan -->
+    <aside class="plan-col">
+      <div class="plan-header">
+        <h2 class="plan-title">This Week</h2>
+        <button class="btn-icon" id="clearPlanBtn">Clear</button>
+      </div>
+      <div id="planDropZone" class="plan-drop-zone">
+        <div id="planEmptyMsg" class="plan-empty-msg">Drag meals here to plan your week</div>
+        <ul id="planList" class="plan-list"></ul>
+      </div>
+      <div class="plan-footer">
+        <div id="planSummary" class="plan-summary"></div>
+        <button id="generateFromPlanBtn" class="btn btn-primary btn-block" disabled>Generate Shopping List</button>
+      </div>
+    </aside>
   </main>
 
   <!-- Meal Form Modal -->
@@ -110,7 +128,7 @@
     <div class="modal-backdrop"></div>
     <div class="modal-content modal-lg">
 
-      <!-- Step 1: Select meals -->
+      <!-- Step 1: Select meals (used when opened from header) -->
       <div id="shoppingStep1">
         <div class="modal-header">
           <h2>Shopping List</h2>
@@ -131,6 +149,10 @@
           <button class="modal-close" id="shoppingClose2" aria-label="Close">&times;</button>
         </div>
         <div id="shoppingListContent" class="shopping-list-content"></div>
+        <div class="cost-section">
+          <button id="estimateCostBtn" class="btn btn-secondary btn-block">Estimate Cost with AI</button>
+          <div id="costResult" class="cost-result hidden"></div>
+        </div>
         <div class="modal-actions">
           <button class="btn btn-ghost" id="backToMealsBtn">← Back</button>
           <button class="btn btn-primary" id="printListBtn">Print</button>

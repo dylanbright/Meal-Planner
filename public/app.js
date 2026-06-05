@@ -2,6 +2,9 @@ let meals = [];
 let editingId = null;
 let pendingDeleteId = null;
 let ingredients = [];
+let plannedMeals = []; // array of meal IDs, persisted in localStorage
+let currentShoppingItems = []; // used for cost estimation
+let shoppingOpenedFromPlan = false;
 
 const mealGrid = document.getElementById('mealGrid');
 const emptyState = document.getElementById('emptyState');
@@ -24,15 +27,17 @@ const ingredientTags = document.getElementById('ingredientTags');
 
 const deleteDialog = document.getElementById('deleteDialog');
 const deleteDialogMsg = document.getElementById('deleteDialogMsg');
-
 const shoppingModal = document.getElementById('shoppingModal');
+const planDropZone = document.getElementById('planDropZone');
 
 // --- Data ---
 
 async function loadMeals() {
   const res = await fetch('/api/meals');
   meals = await res.json();
+  loadPlan();
   renderGrid();
+  renderPlan();
 }
 
 async function saveMeal(data) {
@@ -54,12 +59,88 @@ async function saveMeal(data) {
     meals.push(created);
   }
   renderGrid();
+  renderPlan();
 }
 
 async function deleteMeal(id) {
   await fetch(`/api/meals/${id}`, { method: 'DELETE' });
   meals = meals.filter(m => m.id !== id);
+  plannedMeals = plannedMeals.filter(pid => pid !== id);
+  savePlan();
   renderGrid();
+  renderPlan();
+}
+
+// --- Weekly plan ---
+
+function loadPlan() {
+  try {
+    const saved = localStorage.getItem('dinner-plan');
+    plannedMeals = saved ? JSON.parse(saved) : [];
+    // Remove any IDs for meals that no longer exist
+    plannedMeals = plannedMeals.filter(id => meals.find(m => m.id === id));
+  } catch (e) {
+    plannedMeals = [];
+  }
+}
+
+function savePlan() {
+  localStorage.setItem('dinner-plan', JSON.stringify(plannedMeals));
+}
+
+function addToPlan(mealId) {
+  plannedMeals.push(mealId);
+  savePlan();
+  renderPlan();
+}
+
+function removeFromPlan(index) {
+  plannedMeals.splice(index, 1);
+  savePlan();
+  renderPlan();
+}
+
+function renderPlan() {
+  const list = document.getElementById('planList');
+  const emptyMsg = document.getElementById('planEmptyMsg');
+  const summary = document.getElementById('planSummary');
+  const generateBtn = document.getElementById('generateFromPlanBtn');
+
+  if (plannedMeals.length === 0) {
+    list.innerHTML = '';
+    emptyMsg.classList.remove('hidden');
+    summary.textContent = '';
+    generateBtn.disabled = true;
+    return;
+  }
+
+  emptyMsg.classList.add('hidden');
+
+  const totalNights = plannedMeals.reduce((sum, id) => {
+    const meal = meals.find(m => m.id === id);
+    return sum + (meal?.nights || 1);
+  }, 0);
+
+  summary.textContent = `${plannedMeals.length} meal${plannedMeals.length !== 1 ? 's' : ''} · ${totalNights} night${totalNights !== 1 ? 's' : ''}`;
+  generateBtn.disabled = false;
+
+  list.innerHTML = plannedMeals.map((id, index) => {
+    const meal = meals.find(m => m.id === id);
+    if (!meal) return '';
+    const hasIngredients = (meal.ingredients || []).length > 0;
+    return `
+      <li class="plan-item${hasIngredients ? '' : ' plan-item-no-ing'}">
+        <span class="plan-item-name" title="${escHtml(meal.name)}">${escHtml(meal.name)}</span>
+        <span class="plan-item-nights">${meal.nights}n</span>
+        ${!hasIngredients ? `<span class="plan-item-warn" title="No ingredients saved">&#9888;</span>` : ''}
+        <button class="plan-item-remove" data-index="${index}" aria-label="Remove">&times;</button>
+      </li>
+    `;
+  }).join('');
+
+  list.querySelectorAll('[data-index]').forEach(btn => {
+    btn.addEventListener('click', () => removeFromPlan(parseInt(btn.dataset.index)));
+  });
 }
 
 // --- Render grid ---
@@ -88,6 +169,8 @@ function renderGrid() {
     const ingCount = (meal.ingredients || []).length;
     const card = document.createElement('div');
     card.className = 'meal-card';
+    card.draggable = true;
+    card.dataset.mealId = meal.id;
     card.innerHTML = `
       <div class="meal-card-header">
         <h3>${escHtml(meal.name)}</h3>
@@ -111,6 +194,15 @@ function renderGrid() {
           </div>
         </div>` : ''}
     `;
+
+    // Drag events
+    card.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('mealId', meal.id);
+      e.dataTransfer.effectAllowed = 'copy';
+      setTimeout(() => card.classList.add('dragging'), 0);
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
     mealGrid.appendChild(card);
   });
 
@@ -121,6 +213,27 @@ function renderGrid() {
     btn.addEventListener('click', () => confirmDelete(btn.dataset.delete));
   });
 }
+
+// --- Drop zone ---
+
+planDropZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+  planDropZone.classList.add('drag-over');
+});
+
+planDropZone.addEventListener('dragleave', e => {
+  if (!planDropZone.contains(e.relatedTarget)) {
+    planDropZone.classList.remove('drag-over');
+  }
+});
+
+planDropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  planDropZone.classList.remove('drag-over');
+  const mealId = e.dataTransfer.getData('mealId');
+  if (mealId) addToPlan(mealId);
+});
 
 // --- Meal modal ---
 
@@ -137,7 +250,8 @@ function openAdd() {
   fetchIngredientsBtn.disabled = true;
   renderIngredientTags();
   modalTitle.textContent = 'Add Meal';
-  openModal();
+  modal.classList.remove('hidden');
+  mealNameInput.focus();
 }
 
 function openEdit(id) {
@@ -157,10 +271,6 @@ function openEdit(id) {
   fetchIngredientsBtn.disabled = !meal.recipeUrl;
   renderIngredientTags();
   modalTitle.textContent = 'Edit Meal';
-  openModal();
-}
-
-function openModal() {
   modal.classList.remove('hidden');
   mealNameInput.focus();
 }
@@ -313,9 +423,11 @@ mealForm.addEventListener('submit', async e => {
 let selectedMealIds = new Set();
 
 function openShoppingModal() {
+  shoppingOpenedFromPlan = false;
   selectedMealIds = new Set();
   document.getElementById('shoppingStep1').classList.remove('hidden');
   document.getElementById('shoppingStep2').classList.add('hidden');
+  document.getElementById('backToMealsBtn').classList.remove('hidden');
   renderShoppingMealList();
   shoppingModal.classList.remove('hidden');
 }
@@ -347,7 +459,7 @@ function renderShoppingMealList() {
             &middot;
             ${hasIngredients
               ? `${ingCount} ingredient${ingCount !== 1 ? 's' : ''}`
-              : '<span class="no-ing-note">no ingredients saved — edit meal to fetch them</span>'}
+              : '<span class="no-ing-note">no ingredients saved</span>'}
           </span>
         </div>
       </label>
@@ -364,7 +476,18 @@ function renderShoppingMealList() {
 }
 
 function buildShoppingList() {
-  const selected = meals.filter(m => selectedMealIds.has(m.id));
+  showShoppingListForMeals([...selectedMealIds]);
+}
+
+function generateFromPlan() {
+  shoppingOpenedFromPlan = true;
+  document.getElementById('backToMealsBtn').classList.add('hidden');
+  showShoppingListForMeals([...plannedMeals]);
+  shoppingModal.classList.remove('hidden');
+}
+
+function showShoppingListForMeals(mealIds) {
+  const selected = meals.filter(m => mealIds.includes(m.id));
   const totalNights = selected.reduce((sum, m) => sum + (m.nights || 1), 0);
 
   const allItems = [];
@@ -377,9 +500,10 @@ function buildShoppingList() {
     }
   }
 
+  currentShoppingItems = allItems;
+
   const specials = allItems.filter(i => i.isSpecial);
   const regular = allItems.filter(i => !i.isSpecial);
-
   const content = document.getElementById('shoppingListContent');
 
   let html = `
@@ -429,27 +553,80 @@ function buildShoppingList() {
   }
 
   if (allItems.length === 0) {
-    html += '<p class="shopping-empty">No ingredients to show for the selected meals.</p>';
+    html += '<p class="shopping-empty">No ingredients found for the selected meals. Edit meals to add ingredients.</p>';
   }
 
   content.innerHTML = html;
 
-  // Strike through checked items
   content.querySelectorAll('.shopping-cb').forEach(cb => {
     cb.addEventListener('change', () => {
-      const textEl = cb.closest('li').querySelector('.shopping-item-text');
-      textEl.classList.toggle('checked-off', cb.checked);
+      cb.closest('li').querySelector('.shopping-item-text').classList.toggle('checked-off', cb.checked);
     });
   });
+
+  // Reset cost section
+  document.getElementById('estimateCostBtn').disabled = allItems.length === 0;
+  document.getElementById('costResult').classList.add('hidden');
+  document.getElementById('costResult').innerHTML = '';
 
   document.getElementById('shoppingStep1').classList.add('hidden');
   document.getElementById('shoppingStep2').classList.remove('hidden');
 }
 
+// --- Cost estimation ---
+
+document.getElementById('estimateCostBtn').addEventListener('click', async () => {
+  if (!currentShoppingItems.length) return;
+
+  const btn = document.getElementById('estimateCostBtn');
+  const result = document.getElementById('costResult');
+
+  btn.disabled = true;
+  btn.textContent = 'Estimating…';
+
+  try {
+    const res = await fetch('/api/estimate-cost', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ingredients: currentShoppingItems.map(i => i.text) })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Unknown error');
+
+    result.innerHTML = `
+      <div class="cost-total">Estimated: $${data.total_low} &ndash; $${data.total_high}</div>
+      <div class="cost-note">${escHtml(data.note || 'Prices vary by region and store.')}</div>
+      <button class="cost-breakdown-toggle" id="toggleBreakdown">Show itemized breakdown &#9660;</button>
+      <ul class="cost-breakdown-list hidden" id="costBreakdown">
+        ${(data.items || []).map(item => `
+          <li class="cost-breakdown-item">
+            <span>${escHtml(String(item.ingredient))}</span>
+            <span class="cost-amount">~$${typeof item.cost === 'number' ? item.cost.toFixed(2) : item.cost}</span>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+    result.classList.remove('hidden');
+
+    document.getElementById('toggleBreakdown').addEventListener('click', function () {
+      const breakdown = document.getElementById('costBreakdown');
+      breakdown.classList.toggle('hidden');
+      this.textContent = breakdown.classList.contains('hidden')
+        ? 'Show itemized breakdown ▾'
+        : 'Hide breakdown ▴';
+    });
+  } catch (err) {
+    result.innerHTML = `<div class="fetch-status error">&#10007; ${escHtml(err.message)}</div>`;
+    result.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Estimate Cost with AI';
+  }
+});
+
 // --- Event bindings ---
 
 document.getElementById('addBtn').addEventListener('click', openAdd);
-document.getElementById('shoppingBtn').addEventListener('click', openShoppingModal);
 document.getElementById('modalClose').addEventListener('click', closeModal);
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
 
@@ -472,6 +649,13 @@ document.getElementById('shoppingClose').addEventListener('click', closeShopping
 document.getElementById('shoppingClose2').addEventListener('click', closeShoppingModal);
 document.getElementById('shoppingCancelBtn').addEventListener('click', closeShoppingModal);
 document.getElementById('buildListBtn').addEventListener('click', buildShoppingList);
+document.getElementById('generateFromPlanBtn').addEventListener('click', generateFromPlan);
+document.getElementById('clearPlanBtn').addEventListener('click', () => {
+  plannedMeals = [];
+  savePlan();
+  renderPlan();
+});
+
 document.getElementById('backToMealsBtn').addEventListener('click', () => {
   document.getElementById('shoppingStep1').classList.remove('hidden');
   document.getElementById('shoppingStep2').classList.add('hidden');
