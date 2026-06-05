@@ -661,6 +661,44 @@ document.getElementById('backToMealsBtn').addEventListener('click', () => {
   document.getElementById('shoppingStep2').classList.add('hidden');
 });
 document.getElementById('printListBtn').addEventListener('click', () => window.print());
+document.getElementById('copyListBtn').addEventListener('click', copyShoppingList);
+
+async function copyShoppingList() {
+  if (!currentShoppingItems.length) return;
+
+  const specials = currentShoppingItems.filter(i => i.isSpecial);
+  const regular = currentShoppingItems.filter(i => !i.isSpecial);
+
+  const lines = [];
+  if (specials.length) {
+    lines.push('** SPECIAL INGREDIENTS **');
+    specials.forEach(i => lines.push(`- ${i.text}`));
+    lines.push('');
+  }
+  if (regular.length) {
+    if (specials.length) lines.push('ALL INGREDIENTS');
+    regular.forEach(i => lines.push(`- ${i.text}`));
+  }
+  const text = lines.join('\n');
+
+  const btn = document.getElementById('copyListBtn');
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = 'Copied!';
+  } catch (err) {
+    // Fallback for older browsers / non-HTTPS contexts
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = 'Copied!';
+  }
+  setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+}
 
 modal.querySelector('.modal-backdrop').addEventListener('click', closeModal);
 deleteDialog.querySelector('.modal-backdrop').addEventListener('click', closeDeleteDialog);
