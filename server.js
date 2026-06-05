@@ -141,9 +141,10 @@ app.post('/api/parse-ingredients', async (req, res) => {
     const message = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
+      system: 'You are an ingredient list extractor. You output ONLY a clean ingredient list, one per line. You never add commentary, explanations, questions, headings, or any text that is not an ingredient. If the input is already a short clean list, return it as-is. If the input contains no ingredients at all, return nothing.',
       messages: [{
         role: 'user',
-        content: `Extract only the ingredients from this recipe text. Return them one per line with quantities and preparation notes (e.g. "diced", "minced"). Remove all headings, instructions, ads, navigation, and non-ingredient content. No bullet points, numbers, or commentary — just the ingredients.\n\n${text}`
+        content: `Extract the ingredients from the text below, one per line, keeping quantities and prep notes (e.g. "diced"). Remove headings, instructions, ads, and navigation. Output only the ingredient lines — no bullets, numbers, or commentary.\n\n---\n${text}\n---`
       }]
     });
 
